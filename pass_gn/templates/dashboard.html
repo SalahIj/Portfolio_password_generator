@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-xxl-4 left-section">
+            <h1>Password Generator</h1>
+            <form action="/dashboard" method="post" class="generate">
+                <div class="form-group">
+                    <label for="length">Password Length:</label>
+                    <input type="number" id="length" name="length" class="form-control" min="6" max="32" value="12">
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" id="numbers" name="numbers" value="numbers" class="form-check-input" checked>
+                    <label for="numbers" class="form-check-label">Include Numbers</label>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" id="lowercase" name="lowercase" value="lowercase" class="form-check-input">
+                    <label for="lowercase" class="form-check-label">Include Lowercase Letters</label>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" id="uppercase" name="uppercase" value="uppercase" class="form-check-input">
+                    <label for="uppercase" class="form-check-label">Include Uppercase Letters</label>
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" id="symbols" name="symbols" value="symbols" class="form-check-input">
+                    <label for="symbols" class="form-check-label">Include Symbols</label>
+                </div>
+                <button type="submit" class="btn btn-primary">Generate Password</button>
+            </form>
+            {% if password %}
+            <div class="generated-password">
+                <h2>Your Generated Password:</h2>
+                <p>{{ password }}</p>
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-xxl-8 right-section">
+            {% if passwords %}
+            <div class="generated-passwords">
+                <h2>Previously Generated Passwords:</h2>
+                <div class="table-responsive-xxl">
+                <table class="table table-dark table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date Generated</th>
+                            <th>Password</th>
+                            <th colspan="2">Options</th> <!-- Merge two cells for the "Options" header -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in passwords %}
+                        <tr>
+                            <td>{{ entry.date_generated }}</td>
+                            <td>{{ entry.password }}</td>
+                            <td>
+                                Include Numbers: {% if entry.include_numbers %}Yes{% else %}No{% endif %}<br>
+                                Include Lowercase Letters: {% if entry.include_lowercase %}Yes{% else %}No{% endif %}<br>
+                                Include Uppercase Letters: {% if entry.include_uppercase %}Yes{% else %}No{% endif %}<br>
+                                Include Symbols: {% if entry.include_symbols %}Yes{% else %}No{% endif %}<br>
+                            </td>
+                            <td>
+                                <form action="{{ url_for('delete_password', password_id=entry.id) }}" method="post">
+                                    <button type="submit" class="btn btn-outline-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
