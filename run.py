@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from pass_gn import app
 
 if __name__ == "__main__":
