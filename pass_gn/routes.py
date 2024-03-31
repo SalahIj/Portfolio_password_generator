@@ -6,8 +6,10 @@ import string
 from datetime import datetime
 from pass_gn.models import User, Password
 from flask_login import login_user, current_user, logout_user, login_required
+import threading
 
 
+lock = threading.Lock()
 
 def generate_password(length=0, include_numbers=True, include_lowercase=True, include_uppercase=True, include_symbols=True):
     """Generate a random password based on user preferences."""
@@ -35,56 +37,99 @@ def home():
 
     # If the request method is POST, generate a temporary password
     if request.method == 'POST':
-        length = int(request.form.get('length', 0))
-        include_numbers = 'numbers' in request.form
-        include_lowercase = 'lowercase' in request.form
-        include_uppercase = 'uppercase' in request.form
-        include_symbols = 'symbols' in request.form
+        with lock:
+            length = request.form.get('length', '')  # Get the length as a string
+            if not length.isdigit():
+                flash("Please enter a valid number for password length.", 'danger')
+                return redirect(url_for('home'))
 
-        if not (include_numbers or include_lowercase or include_uppercase or include_symbols):
-            flash("Please select at least one option for password composition.", 'danger')
-            return redirect(url_for('home'))
+            length = int(length)
+            if length < 6 or length > 50:
+                flash("Password length must be between 6 and 50 characters.", 'danger')
+                return redirect(url_for('home'))
 
-        password = generate_password(length, include_numbers, include_lowercase, include_uppercase, include_symbols)
-        return render_template('home.html', password=password)
+            include_numbers = 'numbers' in request.form
+            include_lowercase = 'lowercase' in request.form
+            include_uppercase = 'uppercase' in request.form
+            include_symbols = 'symbols' in request.form
+
+            # Check if no options for password composition are selected
+            if not (include_numbers or include_lowercase or include_uppercase or include_symbols):
+                flash("Please select at least one option for password composition.", 'danger')
+                return redirect(url_for('home'))
+
+            # Check if user wants password without numbers
+            if not include_numbers:
+                flash("Password without numbers may be weak. Are you sure?", 'warning')
+
+            password = generate_password(length, include_numbers, include_lowercase, include_uppercase, include_symbols)
+            return redirect(url_for('generated_password', password=password))
 
     # If the request method is GET, render the home page
     return render_template('home.html')
 
 
+@app.route('/generated_password/<password>')
+def generated_password(password):
+    return render_template('generated_password.html', password=password)
+
+
 @app.route('/dashboard', methods=['GET', 'POST'])
 def dashboard():
     if request.method == 'POST':
-        length = int(request.form.get('length', 0))
-        include_numbers = 'numbers' in request.form
-        include_lowercase = 'lowercase' in request.form
-        include_uppercase = 'uppercase' in request.form
-        include_symbols = 'symbols' in request.form
+        with lock:  # Acquire the lock
+            length = request.form.get('length', '')  # Get the length as a string
+            if not length.isdigit():
+                flash("Please enter a valid number for password length.", 'danger')
+                return redirect(url_for('dashboard'))
 
-        if not (include_numbers or include_lowercase or include_uppercase or include_symbols):
-            flash("Please select at least one option for password composition.", 'danger')
-            return redirect(url_for('dashboard'))
+            length = int(length)
+            if length < 6 or length > 50:
+                flash("Password length must be between 6 and 50 characters.", 'danger')
+                return redirect(url_for('dashboard'))
 
-        password = generate_password(length, include_numbers, include_lowercase, include_uppercase, include_symbols)
-        new_password = Password(
-            password=password,
-            include_numbers=include_numbers,
-            include_lowercase=include_lowercase,
-            include_uppercase=include_uppercase,
-            include_symbols=include_symbols,
-            user_id=current_user.id
-        )
-        db.session.add(new_password)
-        db.session.commit()
-        passwords = Password.query.filter_by(user_id=current_user.id).all()
-        
-        return render_template('dashboard.html', password=password, passwords=passwords)
+            include_numbers = 'numbers' in request.form
+            include_lowercase = 'lowercase' in request.form
+            include_uppercase = 'uppercase' in request.form
+            include_symbols = 'symbols' in request.form
+
+            # Check if no options for password composition are selected
+            if not (include_numbers or include_lowercase or include_uppercase or include_symbols):
+                flash("Please select at least one option for password composition.", 'danger')
+                return redirect(url_for('dashboard'))
+
+            # Check if user wants password without numbers
+            if not include_numbers:
+                flash("Password without numbers may be weak. Are you sure?", 'warning')
+
+            password = generate_password(length, include_numbers, include_lowercase, include_uppercase, include_symbols)
+            new_password = Password(
+                password=password,
+                include_numbers=include_numbers,
+                include_lowercase=include_lowercase,
+                include_uppercase=include_uppercase,
+                include_symbols=include_symbols,
+                user_id=current_user.id
+            )
+            db.session.add(new_password)
+            db.session.commit()
+            passwords = Password.query.filter_by(user_id=current_user.id).all()
+            
+            return redirect(url_for('dashboard_password', password=password, passwords=passwords))
     else:
-        # Query passwords from the database for the current user
-        passwords = Password.query.filter_by(user_id=current_user.id).all()
-        
-        # Render the dashboard template with passwords
-        return render_template('dashboard.html', passwords=passwords)
+        with lock:  # Acquire the lock
+            # Query passwords from the database for the current user
+            passwords = Password.query.filter_by(user_id=current_user.id).all()
+            
+            # Render the dashboard template with passwords
+            return render_template('dashboard.html', passwords=passwords)
+
+
+
+@app.route('/dashboard_password/<password>')
+def dashboard_password(password):
+    passwords = Password.query.filter_by(user_id=current_user.id).all()
+    return render_template('dashboard_password.html', password=password, passwords=passwords)
 
 
 @app.route("/register", methods=['GET', 'POST'])
