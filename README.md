@@ -51,5 +51,5 @@ This project portfolio documents the development process and features of a passw
 For any inquiries or feedback, please contact:
 
 - Grari Zakaria: [grarizakaria@gmail.com](mailto:grarizakaria@gmail.com)
-- Salah Eddine Ijbar: [salahijbar@gmail.com](mailto:salahijbar@gmail.com)
+- Salah Eddine Ijbar: [ijbarsalaheddine@gmail.com](mailto:ijbarsalaheddine@gmail.com)
 
