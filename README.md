@@ -6,7 +6,7 @@ This project portfolio documents the development process and features of a passw
 
 ## Contributors
 
-- **Grari Zakaria** - Project Lead
+- **Grari Zakaria** - Collaborator
 - **Salah Eddine Ijbar** - Collaborator
 
 ## Features
@@ -14,8 +14,6 @@ This project portfolio documents the development process and features of a passw
 - Generate strong and secure passwords
 - Customize password length
 - Include uppercase letters, lowercase letters, numbers, and special characters in passwords
-- Option to exclude ambiguous characters (such as `I`, `l`, `1`, `0`, etc.)
-- Copy generated passwords to clipboard
 - User-friendly interface
 
 ## Installation
@@ -23,16 +21,16 @@ This project portfolio documents the development process and features of a passw
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/your_username/password-generator.git
+    git clone https://github.com/SalahIj/Portfolio_password_generator.git
     ```
 
 2. Navigate to the project directory:
 
     ```bash
-    cd password-generator
+    cd Portfolio_password_generator
     ```
 
-3. Open `index.html` in your preferred web browser.
+3. python3 run.py
 
 ## Usage
 
@@ -42,25 +40,16 @@ This project portfolio documents the development process and features of a passw
     - Select the types of characters to include.
     - Check or uncheck the option to exclude ambiguous characters.
 3. Click the "Generate Password" button to generate a password.
-4. Click the "Copy to Clipboard" button to copy the generated password.
 
-## Example
-
-![Password Generator Screenshot](./screenshot.png)
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
 ## Acknowledgments
 
 - Inspired by the need for strong and secure passwords in today's digital age.
-- Special thanks to [name of any libraries or resources used] for their contributions to this project.
 
 ## Contact
 
 For any inquiries or feedback, please contact:
 
-- Grari Zakaria: [grarizakaria@example.com](mailto:grarizakaria@example.com)
-- Salah Eddine Ijbar: [salahijbar@example.com](mailto:salahijbar@example.com)
+- Grari Zakaria: [grarizakaria@gmail.com](mailto:grarizakaria@gmail.com)
+- Salah Eddine Ijbar: [salahijbar@gmail.com](mailto:salahijbar@gmail.com)
 
