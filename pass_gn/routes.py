@@ -1,17 +1,15 @@
-# app.py
-
 import os
 import secrets
 import string
 import random
 from PIL import Image
-from flask import render_template, url_for, flash, redirect, request, abort
+from flask import render_template, url_for, flash, redirect, request, abort, session
 from pass_gn.forms import RegistrationForm, LoginForm, UpdateAccountForm
 from pass_gn import app, db, bcrypt
 from pass_gn.models import User, Password
 from flask_login import login_user, current_user, logout_user, login_required
 
-def generate_password(length=12, include_numbers=True, include_lowercase=True, include_uppercase=True, include_symbols=True):
+def generate_password(length=0, include_numbers=True, include_lowercase=True, include_uppercase=True, include_symbols=True):
     """Generate a random password based on user preferences."""
     characters = ''
     if include_numbers:
@@ -29,9 +27,12 @@ def generate_password(length=12, include_numbers=True, include_lowercase=True, i
 @app.route("/", methods=['GET', 'POST'])
 @app.route("/home", methods=['GET', 'POST'])
 def home():
+    # Check if the user is authenticated (logged in)
     if current_user.is_authenticated:
+        # If authenticated, route to the dashboard
         return redirect(url_for('dashboard'))
 
+    # If the request method is POST, generate a temporary password
     if request.method == 'POST':
         length = request.form.get('length', '')
         if not length.isdigit():
@@ -43,6 +44,7 @@ def home():
             flash("Password length must be between 6 and 50 characters.", 'danger')
             return redirect(url_for('home'))
 
+        length = int(request.form.get('length', 0))
         include_numbers = 'numbers' in request.form
         include_lowercase = 'lowercase' in request.form
         include_uppercase = 'uppercase' in request.form
@@ -52,17 +54,20 @@ def home():
             flash("Please select at least one option for password composition.", 'danger')
             return redirect(url_for('home'))
 
-        if not include_numbers:
-            flash("Password without numbers may be weak. Are you sure?", 'warning')
-
         password = generate_password(length, include_numbers, include_lowercase, include_uppercase, include_symbols)
-        return redirect(url_for('generated_password', password=password))
+        session['password'] = password  # Store the password in session
+        return redirect(url_for('generator'))
 
+    # If the request method is GET, render the home page
     return render_template('home.html')
 
-@app.route('/generated_password/<password>')
-def generated_password(password):
-    return render_template('generated_password.html', password=password)
+
+@app.route('/generator', methods=['GET', 'POST'])
+def generator():
+    password = session.pop('password', None)  # Retrieve and remove the password from session
+    if not password:
+        return redirect(url_for('home'))
+    return render_template('generator.html', password=password)
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
@@ -91,6 +96,7 @@ def dashboard():
             flash("Password without numbers may be weak. Are you sure?", 'warning')
 
         password = generate_password(length, include_numbers, include_lowercase, include_uppercase, include_symbols)
+        session['password'] = password  # Store the password in session
         new_password = Password(
             password=password,
             include_numbers=include_numbers,
@@ -101,16 +107,18 @@ def dashboard():
         )
         db.session.add(new_password)
         db.session.commit()
-        passwords = Password.query.filter_by(user_id=current_user.id).all()
         
-        return redirect(url_for('dashboard_password', password=password, passwords=passwords))
+        return redirect(url_for('dashboard_password'))
     else:
         passwords = Password.query.filter_by(user_id=current_user.id).all()
         
         return render_template('dashboard.html', passwords=passwords)
 
-@app.route('/dashboard_password/<password>')
-def dashboard_password(password):
+@app.route('/dashboard_password', methods=['GET', 'POST'])
+def dashboard_password():
+    password = session.pop('password', None)  # Retrieve and remove the password from session
+    if not password:
+        return redirect(url_for('dashboard'))
     passwords = Password.query.filter_by(user_id=current_user.id).all()
     return render_template('dashboard_password.html', password=password, passwords=passwords)
 
@@ -180,6 +188,7 @@ def account():
         form.email.data = current_user.email
     image_file = url_for('static', filename='profile_pics/' + current_user.image_file)
     return render_template('account.html', title='Account', image_file=image_file, form=form)
+
 
 @app.route("/delete_password/<int:password_id>", methods=['POST'])
 @login_required
